@@ -27,7 +27,7 @@ services:
       - resus
     restart: unless-stopped
   license-engine:
-    container_name: license-engine
+    container_name: engine
     image: "cr.tik.uni-stuttgart.de/izus-darus/license-checker/engine:${TAGENGINE}"
     ports:
       - '7001:7000'
