@@ -3,9 +3,7 @@ version: '3'
 services:
   frontend:
     container_name: frontend
-    build:
-      context: ./LicenseChecker_Frontend
-      dockerfile: Dockerfile
+    image: "cr.tik.uni-stuttgart.de/izus-darus/license-checker/frontend:${TAGFRONTED}"
     ports:
       - '5173:80'
     networks:
@@ -13,9 +11,7 @@ services:
     restart: unless-stopped
   backend:
     container_name: backend
-    build:
-      context: ./LicenseChecker_Backend
-      dockerfile: Dockerfile
+    image: "cr.tik.uni-stuttgart.de/izus-darus/license-checker/backend:${TAGBACKEND}"
     ports:
       - '8000:8000'
     networks:
@@ -32,7 +28,7 @@ services:
     restart: unless-stopped
   license-engine:
     container_name: license-engine
-    build: ./license-engine
+    image: "cr.tik.uni-stuttgart.de/izus-darus/license-checker/engine:${TAGENGINE}"
     ports:
       - '7001:7000'
     networks:
