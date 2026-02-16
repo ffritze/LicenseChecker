@@ -6,10 +6,6 @@
       <div v-show="!showTable" class="center-container custom-background-color">
         <div class="form-container">
           <q-form @submit="uploadFile">
-            <q-select outlined hint="Python (requirements.txt, Pipfile, pyproject.toml)"
-              :rules="[val => !!val || 'This field is required']" v-model="selectedChoice" :options="choices"
-              label="Select Dependency File Type" color="secondary" style="margin-bottom: 15px;">
-            </q-select>
             <q-uploader hide-upload-btn label="Upload zip file" accept=".zip" @added="handleFileUpload"
               color="secondary">
             </q-uploader>
@@ -91,7 +87,6 @@ export default {
       options: [
         { value: 'ZipFileUpload', label: 'Zip File Upload' },
       ],
-      choices: ['Python', 'JS'],
       columns: [
         { name: 'selected', label: 'Select', align: 'left' },
         { name: 'package_name', label: 'Package Name', align: 'left' },
