@@ -26,6 +26,8 @@ from util import *
 #JWT_SECRET = 'myjwtsecret'
 from typing import Literal
 import pathlib
+import zipfile
+import io
 
 app = FastAPI(
     title="License Checker",
@@ -577,4 +579,63 @@ async def create_upload_file(file: UploadFile,choice: Literal['Python','JS'] = "
             )
 
 
+@app.post("/licenses/uploadzipfile/")
+async def upload_zip_file(file: UploadFile, choice: Literal['Python','JS'] = "Python"):
+    contents = await file.read()
+    file_extension = pathlib.Path(file.filename).suffix
 
+    if file_extension.lower() != ".zip":
+        raise HTTPException(
+            status_code=415,
+            detail="Invalid file type. Please upload a .zip file.",
+        )
+
+    try:
+        zip_buffer = io.BytesIO(contents)
+        with zipfile.ZipFile(zip_buffer, 'r') as zip_file:
+            # Define which dependency files to look for based on choice
+            if choice == "Python":
+                target_files = ["requirements.txt", "Pipfile", "pyproject.toml"]
+            elif choice == "JS":
+                target_files = ["package.json"]
+            else:
+                raise HTTPException(status_code=400, detail="Invalid choice.")
+
+            # Search for matching dependency files inside the zip
+            found_file = None
+            found_name = None
+            for name in zip_file.namelist():
+                basename = pathlib.Path(name).name
+                if basename in target_files:
+                    found_file = zip_file.read(name)
+                    found_name = basename
+                    break
+
+            if found_file is None:
+                raise HTTPException(
+                    status_code=415,
+                    detail=f"No matching dependency file found in zip. Expected one of: {', '.join(target_files)}",
+                )
+
+            # Process the found dependency file
+            if choice == "JS":
+                lic_info = check_js_dependency(found_file)
+            elif choice == "Python":
+                ext = pathlib.Path(found_name).suffix
+                if ext == ".txt" or found_name == "Pipfile":
+                    lic_info = check_python_dependency(found_file)
+                elif ext == ".toml":
+                    lic_info = check_python_toml_dependency(found_file)
+                else:
+                    raise HTTPException(
+                        status_code=415,
+                        detail="Unsupported Python dependency file found in zip.",
+                    )
+
+            return {"filename": file.filename, "Content": lic_info}
+
+    except zipfile.BadZipFile:
+        raise HTTPException(
+            status_code=415,
+            detail="The uploaded file is not a valid zip archive.",
+        )
