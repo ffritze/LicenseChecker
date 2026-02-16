@@ -170,6 +170,9 @@
     <div v-show="selectedOption === 'DependencyFileUpload'">
       <DependencyFileUpload />
     </div>
+    <div v-show="selectedOption === 'ZipFileUpload'">
+      <ZipFileUpload />
+    </div>
 
   </div>
 
@@ -181,6 +184,7 @@ import axios from "axios";
 // import DesktopUpload from './Desktop-Upload.vue'
 import AddLicensesManually from './AddLicensesManually.vue'
 import DependencyFileUpload from './DependencyFileUpload.vue'
+import ZipFileUpload from './ZipFileUpload.vue'
 
 import { mapGetters, mapActions } from 'vuex';
 
@@ -199,6 +203,7 @@ export default {
     // DesktopUpload,
     AddLicensesManually,
     DependencyFileUpload,
+    ZipFileUpload,
   },
 
   data() {
@@ -209,6 +214,7 @@ export default {
         { value: 'github', label: 'Retrieve Code from GitHub' },
         // { value: 'desktop', label: 'Upload Code from Local Machine' },
         { value: 'DependencyFileUpload', label: 'Dependency File Upload' },
+        { value: 'ZipFileUpload', label: 'Zip File Upload' },
         { value: 'AddLicensesManually', label: 'Add Licenses Manually' },
 
       ],
@@ -257,6 +263,8 @@ export default {
           return 'Retrieve code from github';
         case 'DependencyFileUpload':
           return 'Upload dependencies (upload a dependency file like a requirements.txt or a project.toml)';
+        case 'ZipFileUpload':
+          return 'Upload a zip file containing your project to analyze its licenses';
         case 'AddLicensesManually':
           return 'Select licenses from the list of Premissive and Copyleft licenses';
         default:
