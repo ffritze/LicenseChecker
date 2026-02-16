@@ -75,7 +75,6 @@ export default {
     return {
       showTable: false,
       loading: false,
-      selectedChoice: 'Python',
       file: null,
       dependencyLicenses: [],
       selectedLicenseIds: [],
@@ -130,9 +129,8 @@ export default {
 
         const formData = new FormData();
         formData.append('file', this.file);
-        formData.append('choice', this.selectedChoice);
 
-        const response = await axios.post(this.backendURL + `/licenses/uploadzipfile/?choice=${this.selectedChoice}`, formData, {
+        const response = await axios.post(this.backendURL + `/licenses/uploadzipfile/`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
