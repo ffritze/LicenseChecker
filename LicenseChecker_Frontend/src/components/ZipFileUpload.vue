@@ -118,9 +118,9 @@ export default {
       );
       this.loading = true;
       this.$q.loading.show({
-        message: 'Searching for licenses',
-        boxClass: 'bg-blue text-secondary',
-        spinnerColor: 'primary'
+        message: "Searching for Licenses",
+        boxClass: "bg-grey-2 text-secondary",
+        spinnerColor: "secondary",
       });
     },
     sanitizePackageName(name) {
