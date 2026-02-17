@@ -5,7 +5,7 @@
     <div v-if="selectedOption === 'ZipFileUpload'">
       <div v-show="!showTable" class="center-container custom-background-color">
         <div class="form-container">
-          <q-form @submit="uploadFile()">
+          <q-form @submit="uploadZipFile()">
             <q-uploader hide-upload-btn label="Upload zip file" accept=".zip" @added="handleFileUpload"
               color="secondary">
             </q-uploader>
