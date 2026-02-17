@@ -66,8 +66,6 @@
 </template>
 
 <script>
-import axios from 'axios';
-
 
 export default {
   name: "ZipFileUpload",
@@ -112,7 +110,7 @@ export default {
     dismissError() {
       this.fileError = '';
     },
-    async uploadZipFile() {
+    uploadZipFile() {
       this.$parent.$emit(
         "uploadZipFile",
         this.fileName,
@@ -124,43 +122,6 @@ export default {
         boxClass: 'bg-blue text-secondary',
         spinnerColor: 'primary'
       });
-      try {
-        if (!this.file) {
-          console.error("No file selected.");
-          this.loading = false;
-          this.$q.loading.hide();
-          return;
-        }
-
-        const formData = new FormData();
-        formData.append('file', this.file);
-
-        const response = await axios.post(this.backendURL + `/licenses/uploadzipfile/`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-        // Process response data to format and display in table
-        const data = response.data;
-        this.dependencyLicenses = Object.entries(data.Content).map(([key, value]) => ({
-          package_name: this.sanitizePackageName(key),
-          license_name: this.sanitizeLicenseName(value.license_name),
-          license_id: value.license_id.includes('AND')
-            ? value.license_id.split(' AND ').map(this.sanitizeLicenseName)
-            : [this.sanitizeLicenseName(value.license_id)],
-          dropdown: value.license_id.includes('AND')
-            ? this.sanitizeLicenseName(value.license_id.split(' AND ')[0])
-            : this.sanitizeLicenseName(value.license_id),
-          selected: false
-
-        }));
-        this.showTable = true;
-      } catch (error) {
-        console.error(error);
-      } finally {
-        this.loading = false;
-        this.$q.loading.hide();
-      }
     },
     sanitizePackageName(name) {
       return name.startsWith('@') ? name.substring(1) : name;
