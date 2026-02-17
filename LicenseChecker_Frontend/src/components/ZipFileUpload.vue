@@ -5,7 +5,7 @@
     <div v-if="selectedOption === 'ZipFileUpload'">
       <div v-show="!showTable" class="center-container custom-background-color">
         <div class="form-container">
-          <q-form @submit="uploadFile">
+          <q-form @submit="uploadFile()">
             <q-uploader hide-upload-btn label="Upload zip file" accept=".zip" @added="handleFileUpload"
               color="secondary">
             </q-uploader>
@@ -112,7 +112,12 @@ export default {
     dismissError() {
       this.fileError = '';
     },
-    async uploadFile() {
+    async uploadZipFile() {
+      this.$parent.$emit(
+        "uploadZipFile",
+        this.fileName,
+        this.file,
+      );
       this.loading = true;
       this.$q.loading.show({
         message: 'Searching for licenses',

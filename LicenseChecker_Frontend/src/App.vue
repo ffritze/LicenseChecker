@@ -150,6 +150,34 @@ export default {
           }
         });
     },
+    uploadZipFile(fileName, file) {
+      /* Posts data to github */
+      const formData = new FormData()
+
+      formData.append("filename", fileName);
+      formData.append("uploadType", "file");
+      formData.append("folderId", "1");
+      formData.append("file", file)
+      axios({
+        method: "post",
+        url: this.engineURL + "/api/v1/software/upload",
+        data: formData,
+      })
+        .then((response) => {
+          this.postResponse = response;
+          this.errorMessage = null;
+          // this.uploadSuccess = true;
+          console.log("Upload is Sucessful:", this.uploadSuccess)
+        })
+        .catch((error) => {
+          // Handle error
+          if (error.response) {
+            this.errorMessage = error.response.data.message;
+            console.error("Response Error Data:", error.response.data.message);
+            console.error("Response Error Status:", error.response.status);
+          }
+        });
+    },
     listCompatibleLicenses(cl) {
       this.compatibleLicenses = cl;
     },
