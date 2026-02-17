@@ -198,9 +198,7 @@ export default {
               this.errorMessage = error.message;
               console.error("Upload error:", error.message);
             }
-          } finally {
-            this.$q.loading.hide();
-          }
+          } 
         } else {
           this.$q.loading.hide();
           this.errorMessage = "The uploaded file is not a valid zip file.";
