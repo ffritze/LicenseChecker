@@ -150,33 +150,56 @@ export default {
           }
         });
     },
-    uploadZipFile(fileName, file) {
+    async uploadZipFile(fileName, file) {
       /* Posts data to github */
-      const formData = new FormData()
+      function isZipFile(arrayBuffer) {
+        const signature = new Uint8Array(arrayBuffer).subarray(0, 4);
+        // ZIP‑Dateien beginnen mit den ASCII‑Bytes: 0x50 0x4B 0x03 0x04 ("PK\u0003\u0004")
+        return (
+          signature[0] === 0x50 && // 'P'
+          signature[1] === 0x4b && // 'K'
+          signature[2] === 0x03 &&
+          signature[3] === 0x04
+        );
+      }
 
-      formData.append("filename", fileName);
-      formData.append("uploadType", "file");
-      formData.append("folderId", "1");
-      formData.append("file", file)
-      axios({
-        method: "post",
-        url: this.engineURL + "/api/v1/software/upload",
-        data: formData,
-      })
-        .then((response) => {
-          this.postResponse = response;
-          this.errorMessage = null;
-          // this.uploadSuccess = true;
-          console.log("Upload is Sucessful:", this.uploadSuccess)
-        })
-        .catch((error) => {
-          // Handle error
-          if (error.response) {
-            this.errorMessage = error.response.data.message;
-            console.error("Response Error Data:", error.response.data.message);
-            console.error("Response Error Status:", error.response.status);
-          }
-        });
+      const slice = file.slice(0, 4);
+      try {
+        const arrayBuffer = slice.arrayBuffer();
+        const zip = isZipFile(arrayBuffer);
+        if (zip === True) {
+          const formData = new FormData()
+
+          formData.append("filename", fileName);
+          formData.append("uploadType", "file");
+          formData.append("folderId", "1");
+          formData.append("file", file)
+          axios({
+            method: "post",
+            url: this.engineURL + "/api/v1/software/upload",
+            data: formData,
+          })
+            .then((response) => {
+              this.postResponse = response;
+              this.errorMessage = null;
+              // this.uploadSuccess = true;
+              console.log("Upload is Sucessful:", this.uploadSuccess)
+            })
+            .catch((error) => {
+              // Handle error
+              if (error.response) {
+                this.errorMessage = error.response.data.message;
+                console.error("Response Error Data:", error.response.data.message);
+                console.error("Response Error Status:", error.response.status);
+              }
+            });
+        } else {
+          console.log("The uploaded file is no zip file")
+        }
+      } catch (err) {
+        resultEl.textContent = 'Fehler beim Lesen der Datei.';
+        console.error(err);
+      }
     },
     listCompatibleLicenses(cl) {
       this.compatibleLicenses = cl;
