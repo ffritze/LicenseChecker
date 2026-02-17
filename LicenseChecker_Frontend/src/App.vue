@@ -11,7 +11,7 @@
           :errorMessage="errorMessage" :compatibleLicenses="compatibleLicenses" :allLicenses="allLicenses"
           :detailedCompatibleLicenses="detailedCompatibleLicenses"
           :detailedCompatibleLicensesId="detailedCompatibleLicensesId" @changedetailedCompatibleLicensesId="changedetailedCompatibleLicensesId
-            " @getCompatibleLicenses="getCompatibleLicenses" />
+            " @getCompatibleLicenses="getCompatibleLicenses" @uploadZipFile="uploadZipFile" />
       </q-page-container>
 
       <q-footer elevated>
@@ -151,7 +151,12 @@ export default {
         });
     },
     async uploadZipFile(fileName, file) {
-      /* Posts data to github */
+      this.$q.loading.show({
+        message: 'Searching for licenses',
+        boxClass: 'bg-blue text-secondary',
+        spinnerColor: 'primary'
+      });
+
       function isZipFile(arrayBuffer) {
         const signature = new Uint8Array(arrayBuffer).subarray(0, 4);
         // ZIP‑Dateien beginnen mit den ASCII‑Bytes: 0x50 0x4B 0x03 0x04 ("PK\u0003\u0004")
@@ -165,39 +170,45 @@ export default {
 
       const slice = file.slice(0, 4);
       try {
-        const arrayBuffer = slice.arrayBuffer();
+        const arrayBuffer = await slice.arrayBuffer();
         const zip = isZipFile(arrayBuffer);
-        if (zip === True) {
+        if (zip === true) {
           const formData = new FormData()
 
           formData.append("filename", fileName);
           formData.append("uploadType", "file");
           formData.append("folderId", "1");
           formData.append("file", file)
-          axios({
-            method: "post",
-            url: this.engineURL + "/api/v1/software/upload",
-            data: formData,
-          })
-            .then((response) => {
-              this.postResponse = response;
-              this.errorMessage = null;
-              // this.uploadSuccess = true;
-              console.log("Upload is Sucessful:", this.uploadSuccess)
-            })
-            .catch((error) => {
-              // Handle error
-              if (error.response) {
-                this.errorMessage = error.response.data.message;
-                console.error("Response Error Data:", error.response.data.message);
-                console.error("Response Error Status:", error.response.status);
-              }
+          try {
+            const response = await axios({
+              method: "post",
+              url: this.engineURL + "/api/v1/software/upload",
+              data: formData,
+              timeout: 300000,
             });
+            this.postResponse = response;
+            this.errorMessage = null;
+            console.log("Upload is Sucessful:", this.uploadSuccess);
+          } catch (error) {
+            if (error.response) {
+              this.errorMessage = error.response.data.message;
+              console.error("Response Error Data:", error.response.data.message);
+              console.error("Response Error Status:", error.response.status);
+            } else {
+              this.errorMessage = error.message;
+              console.error("Upload error:", error.message);
+            }
+          } finally {
+            this.$q.loading.hide();
+          }
         } else {
-          console.log("The uploaded file is no zip file")
+          this.$q.loading.hide();
+          this.errorMessage = "The uploaded file is not a valid zip file.";
+          console.log("The uploaded file is no zip file");
         }
       } catch (err) {
-        resultEl.textContent = 'Fehler beim Lesen der Datei.';
+        this.$q.loading.hide();
+        this.errorMessage = "Error reading the file.";
         console.error(err);
       }
     },

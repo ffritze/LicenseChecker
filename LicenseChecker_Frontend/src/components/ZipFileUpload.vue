@@ -116,12 +116,6 @@ export default {
         this.fileName,
         this.file,
       );
-      this.loading = true;
-      this.$q.loading.show({
-        message: 'Searching for licenses',
-        boxClass: 'bg-blue text-secondary',
-        spinnerColor: 'primary'
-      });
     },
     sanitizePackageName(name) {
       return name.startsWith('@') ? name.substring(1) : name;
