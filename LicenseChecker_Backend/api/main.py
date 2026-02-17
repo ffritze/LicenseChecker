@@ -26,9 +26,6 @@ from util import *
 #JWT_SECRET = 'myjwtsecret'
 from typing import Literal
 import pathlib
-import zipfile
-import io
-import httpx
 
 app = FastAPI(
     title="License Checker",
@@ -580,36 +577,3 @@ async def create_upload_file(file: UploadFile,choice: Literal['Python','JS'] = "
             )
 
 
-MOCKUP_API_URL = "http://localhost:8000/licenses/processzipfile/"
-
-
-async def mockup_process_zip(zip_bytes: bytes, filename: str):
-    """Mockup API call — will be replaced with a real external API endpoint."""
-    # TODO: Replace MOCKUP_API_URL with the real external API endpoint
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            MOCKUP_API_URL,
-            files={"file": (filename, zip_bytes, "application/zip")},
-        )
-
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail=response.json().get("detail", "Error processing zip file."))
-
-    return response.json()
-
-
-@app.post("/licenses/uploadzipfile/")
-async def upload_zip_file(file: UploadFile):
-    contents = await file.read()
-
-    if pathlib.Path(file.filename).suffix.lower() != ".zip":
-        raise HTTPException(status_code=415, detail="Invalid file type. Please upload a .zip file.")
-
-    try:
-        zip_buffer = io.BytesIO(contents)
-        with zipfile.ZipFile(zip_buffer, 'r') as _:
-            pass
-    except zipfile.BadZipFile:
-        raise HTTPException(status_code=415, detail="The uploaded file is not a valid zip archive.")
-
-    return await mockup_process_zip(contents, file.filename)
