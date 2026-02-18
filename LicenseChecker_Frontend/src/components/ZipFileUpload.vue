@@ -67,6 +67,8 @@
 
 <script>
 
+import { mapGetters, mapActions } from 'vuex'
+
 export default {
   name: "ZipFileUpload",
   data() {
@@ -95,8 +97,29 @@ export default {
         { name: 'license', label: 'License Name', align: 'left' }
       ],
       fromLR: false,
+      status: " ",
+      name: " ",
+      toggle: 0,
+      checkTimer: null,
+      repoName: " ",
+      softwareid: null,
+      uploadSuccess: false,
+      licenses: null,
+      checkboxSelection: {},
+      responseArray: [],
+      showDiv1: true,
+      scrollPosition: 0,
+      savedState: null,
     };
   },
+
+  computed: { // accessing the state from store
+    ...mapGetters(['getSelectedOption', 'getShowDiv1', 'getLicenses']),
+
+
+
+  },
+
   beforeRouteEnter(to, from, next) {
     next((vm) => {
       vm.fromLR = from.name === 'LicenseRecommendation';
@@ -105,10 +128,171 @@ export default {
   methods: {
     handleFileUpload(files) {
       this.file = files[0];
-      this.validateFileType();
     },
     dismissError() {
       this.fileError = '';
+    },
+    getTooltipContent(value) {
+      switch (value) {
+        case 'github':
+          return 'Retrieve code from github';
+        case 'DependencyFileUpload':
+          return 'Upload dependencies (upload a dependency file like a requirements.txt or a project.toml)';
+        case 'ZipFileUpload':
+          return 'Upload a zip file containing your project to analyze its licenses';
+        case 'AddLicensesManually':
+          return 'Select licenses from the list of Premissive and Copyleft licenses';
+        default:
+          return '';
+      }
+    },
+    logValues() {
+      console.log('selectedOption:afer ', this.selectedOption);
+      console.log('showDiv1:', this.showDiv1);
+      console.log('licenses:', this.licenses);
+    },
+    ...mapActions(['updateSelectedOption', 'updateShowDiv1', 'updateLicenses']),
+    goToAddLicenses(actionType) {
+      // Store the current state before navigating away
+      this.updateSelectedOption(this.selectedOption);
+      this.updateShowDiv1(this.showDiv1);
+      this.updateLicenses(this.licenses);
+
+      console.log("Selected Option", this.selectedOption);
+      console.log("Showdiv1", this.showDiv1);
+      console.log("Available licenses", this.licenses);
+
+
+
+      // Navigate to DependencyFileUpload.vue
+      if (actionType === 'fromDependencyFile') {
+        this.$router.push('/DependencyFileUpload');
+      } else if (actionType === 'manually') {
+        this.$router.push('/AddLicensesManually');
+      }
+
+    },
+
+    generateSoftwareid() {
+      this.softwareid = this.fileName;
+      console.log("Software ID", this.softwareid);
+      return this.softwareid;
+    },
+    getStatus() {
+      console.log("In status", this.generateSoftwareid())
+
+      axios
+        .get(
+          this.engineURL + "/api/v1/software/status/" +
+          this.generateSoftwareid()
+        )
+
+        .then((response) => {
+          this.status = response.data;
+          console.log("Status", response.data);
+          if (response.data.status) {
+            // checking if it already has a status, i.e "Finished"
+            this.status = response.data.status;
+            this.$q.loading.show({
+              message: this.status,
+              boxClass: "bg-grey-2 text-secondary",
+              spinnerColor: "secondary",
+            });
+            if (this.checkTimer) {
+              setTimeout(() => {
+                this.$q.loading.hide();
+              }, 3000);
+              clearTimeout(this.checkTimer);
+            }
+          } else {
+            this.status = response.data;
+            this.$q.loading.show({
+              message: this.status,
+              boxClass: "bg-grey-2 text-secondary",
+              spinnerColor: "secondary",
+            });
+          }
+          if (this.status == "FINISHED") {
+            setTimeout(() => {
+              // Check if there is an error message
+              if (this.errorMessage) {
+                console.log("Error Message...")
+
+                this.$q.notify({
+                  message: "This software has been analyzed already.",
+                  caption: "Do you want to use the existing results or start a new analysis?",
+                  position: "center",
+                  color: "secondary",
+                  icon: "info",
+                  timeout: 0,
+                  classes: "custom-notification",
+                  actions: [
+                    {
+                      label: "Show Licenses",
+                      color: "primary",
+                      class: "action-button",
+                      title: "Show already analyzed licenses",
+                      handler: () => {
+                        this.foundLincences();
+
+                      },
+
+                    },
+
+                    {
+                      label: "Reanalyze",
+                      color: "primary",
+                      class: "action-button",
+                      title: "Initiate a new analysis",
+
+                      handler: () => {
+                        this.reanalyze();
+                      },
+                    },
+
+                    {
+                      label: 'Dismiss',
+                      color: 'primary',
+                      class: "action-button",
+                      title: "Close",
+                      handler: () => { /* ... */ }
+                    },
+
+                  ],
+                });
+              } else {
+                // Display a success notification
+                this.$q.notify({
+                  message: "Your code has been successfully uploaded.",
+                  caption: "You may now access the list of found licenses.",
+                  position: "center",
+                  icon: "check",
+                  color: '#1A8917',
+                  timeout: 0,
+                  classes: "pos-custom-notification",
+                  actions: [
+                    {
+                      label: "Show Licenses",
+                      class: "pos-action-button",
+                      color: "accent",
+                      title: "Show found licenses",
+                      handler: () => {
+                        this.foundLincences();
+                      },
+                    },
+                    {
+                      label: 'Dismiss',
+                      class: "pos-action-button",
+                      color: "accent",
+                      title: "Close",
+                      handler: () => { /* ... */ }
+                    },
+                  ],
+                });
+              }
+            }, 2000);
+          }
+        });
     },
     uploadZipFile() {
       this.$parent.$emit(
@@ -117,55 +301,67 @@ export default {
         this.file,
       );
       this.loading = true;
+      this.ready();
       this.$q.loading.show({
         message: "Searching for Licenses",
         boxClass: "bg-grey-2 text-secondary",
         spinnerColor: "secondary",
       });
     },
-    sanitizePackageName(name) {
-      return name.startsWith('@') ? name.substring(1) : name;
+    ready() {
+      this.checkTimer = setInterval(() => {
+        this.getStatus();
+      }, 5000);
     },
-    sanitizeLicenseName(name) {
-      if (typeof name === 'string') {
-        return name.replace(/^\(|\)$/g, '');
-      }
-      return name || '';
-    },
-    goBack() {
-      this.showTable = false;
-    },
-    updateSelected() {
-      const addtocompatiblelist = this.dependencyLicenses.filter(row => row.selected).map(row => row.dropdown);
-      this.$parent.$emit('selected-rows', addtocompatiblelist);
-      this.$router.push('/licenseRecommendation');
+    foundLincences() {
+      this.showDiv1 = !this.showDiv1;
+      axios
+        .get(
+          this.engineURL + "/api/v1/software/" +
+          this.generateSoftwareid() +
+          "/licenses"
+        )
 
-    },
-    saveSelected() {
-      const selectedRows = this.dependencyLicenses.filter(row => row.selected).map(row => row.dropdown);
+        .then((response) => {
 
-      console.log('Selected Rows:', selectedRows);
-      this.$parent.$emit('changedetailedCompatibleLicensesId',
-        selectedRows
+          this.licenses = response.data;
+          console.log("Licenses from backend:", this.licenses);
+          this.checkboxSelection = Object.fromEntries(
+            Object.keys(this.licenses).map((license) => [license, true])
+          );
+        })
+        .catch((error) => {
+          console.error("Error fetching licenses:", error);
+        });
+    },
+
+    async compatibleLicenses() {
+      const selectedLicenses = Object.keys(this.checkboxSelection).filter(
+        (license) => this.checkboxSelection[license]
       );
-      this.$parent.$emit(
-        'getCompatibleLicenses',
-        selectedRows
-      );
+      console.log("changedetailedCompatibleLicensesId fromLR", selectedLicenses);
+      this.$emit("changedetailedCompatibleLicensesId", selectedLicenses);
+      //  Ensure selectedLicenses is an array
+      const licensesArray = Array.isArray(selectedLicenses)
+        ? selectedLicenses
+        : [selectedLicenses];
+      this.$emit("getCompatibleLicenses", licensesArray);
       this.$router.push("/compatibleLicenses");
     },
-    validateFileType() {
-      if (!this.file) {
-        this.fileError = null;
-        return;
-      }
 
-      const fileName = this.file.name.toLowerCase();
-      if (!fileName.endsWith('.zip')) {
-        this.fileError = 'Please upload a .zip file.';
-      } else {
-        this.fileError = null;
-      }
+    reanalyze() {
+      // Delete the software with the specified software-id
+      axios
+        .delete(
+          this.engineURL + "/api/v1/software/" + this.generateSoftwareid()
+        )
+        .then(() => {
+          console.log("the software is deleted", this.generateSoftwareid());
+          this.submitForm();
+        })
+        .catch((error) => {
+          console.error("Error deleting software:", error);
+        });
     },
   },
 

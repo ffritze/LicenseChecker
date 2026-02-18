@@ -139,7 +139,7 @@ export default {
           this.postResponse = response;
           this.errorMessage = null;
           // this.uploadSuccess = true;
-          console.log("Upload is Sucessful:", this.uploadSuccess)
+          console.log("Upload is Sucessful.")
         })
         .catch((error) => {
           // Handle error
@@ -188,7 +188,7 @@ export default {
             });
             this.postResponse = response;
             this.errorMessage = null;
-            console.log("Upload is Sucessful:", this.uploadSuccess);
+            console.log("Upload is Sucessful");
           } catch (error) {
             if (error.response) {
               this.errorMessage = error.response.data.message;
