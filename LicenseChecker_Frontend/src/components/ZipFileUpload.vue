@@ -11,7 +11,7 @@
             </q-uploader>
 
             <q-btn style=" margin-top: 15px; background-color:#1A8917; text-transform:capitalize; color: white;"
-              :label="loading ? 'Uploading...' : 'Submit'" type="submit" :loading="loading" :disable="loading" />
+              :label="loading ? 'Uploading...' : 'Submit'" type="submit" :loading="loading" :disable="loading || !file" />
           </q-form>
           <q-banner v-if="fileError" dense inline-actions class="text-secondary bg-red q-mt-lg ">
             {{ fileError }}
