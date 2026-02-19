@@ -67,6 +67,7 @@
 
 <script>
 
+import axios from 'axios';
 import { mapGetters, mapActions } from 'vuex'
 
 export default {
@@ -174,7 +175,7 @@ export default {
     },
 
     generateSoftwareid() {
-      this.softwareid = this.fileName;
+      this.softwareid = this.file?.name;
       console.log("Software ID", this.softwareid);
       return this.softwareid;
     },
