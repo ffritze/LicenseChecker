@@ -298,7 +298,7 @@ export default {
     uploadZipFile() {
       this.$parent.$emit(
         "uploadZipFile",
-        this.fileName,
+        this.file.name,
         this.file,
         this.softwareid,
       );
