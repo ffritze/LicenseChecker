@@ -69,7 +69,6 @@
 
 import axios from 'axios';
 import { mapGetters, mapActions } from 'vuex'
-import md5 from 'blueimp-md5'
 
 export default {
   name: "ZipFileUpload",
