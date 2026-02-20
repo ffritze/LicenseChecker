@@ -128,6 +128,18 @@ export default {
   },
   methods: {
     handleFileUpload(files) {
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      if (files[0].size > maxSize) {
+        this.$q.notify({
+          message: 'File too large',
+          caption: 'The selected file exceeds the 50MB limit. Please upload a smaller file.',
+          type: 'negative',
+          position: 'center',
+          timeout: 5000,
+        });
+        this.file = null;
+        return;
+      }
       this.file = files[0];
     },
     dismissError() {
