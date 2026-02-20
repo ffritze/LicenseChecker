@@ -141,6 +141,12 @@ export default {
         return;
       }
       this.file = files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.softwareid = md5(e.target.result);
+        console.log("Software ID", this.softwareid);
+      };
+      reader.readAsBinaryString(this.file);
     },
     dismissError() {
       this.fileError = '';
@@ -187,8 +193,6 @@ export default {
     },
 
     generateSoftwareid() {
-      this.softwareid = this.file?.name;
-      console.log("Software ID", this.softwareid);
       return this.softwareid;
     },
     getStatus() {
