@@ -143,10 +143,16 @@ export default {
       this.file = files[0];
       const reader = new FileReader();
       reader.onload = (e) => {
-        this.softwareid = md5(e.target.result);
+        const uint8 = new Uint8Array(e.target.result);
+        let binary = '';
+        for (let i = 0; i < uint8.length; i += 8192) {
+          binary += String.fromCharCode(...uint8.subarray(i, i + 8192));
+        }
+        this.softwareid = md5(binary);
         console.log("Software ID", this.softwareid);
       };
-      reader.readAsBinaryString(this.file);
+      reader.onerror = () => console.error("FileReader error:", reader.error);
+      reader.readAsArrayBuffer(this.file);
     },
     dismissError() {
       this.fileError = '';
