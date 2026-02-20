@@ -197,17 +197,13 @@ export default {
       }
 
     },
-
-    generateSoftwareid() {
-      return this.softwareid;
-    },
     getStatus() {
-      console.log("In status", this.generateSoftwareid())
+      console.log("In status", this.softwareid)
 
       axios
         .get(
           this.engineURL + "/api/v1/software/status/" +
-          this.generateSoftwareid()
+          this.softwareid
         )
 
         .then((response) => {
@@ -342,7 +338,7 @@ export default {
       axios
         .get(
           this.engineURL + "/api/v1/software/" +
-          this.generateSoftwareid() +
+          this.softwareid +
           "/licenses"
         )
 
@@ -377,10 +373,10 @@ export default {
       // Delete the software with the specified software-id
       axios
         .delete(
-          this.engineURL + "/api/v1/software/" + this.generateSoftwareid()
+          this.engineURL + "/api/v1/software/" + this.softwareid
         )
         .then(() => {
-          console.log("the software is deleted", this.generateSoftwareid());
+          console.log("the software is deleted", this.softwareid);
           this.submitForm();
         })
         .catch((error) => {
