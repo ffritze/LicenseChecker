@@ -316,6 +316,7 @@ export default {
         "uploadZipFile",
         this.file.name,
         this.file,
+        this.softwareid,
       );
       this.loading = true;
       this.ready();

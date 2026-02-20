@@ -150,7 +150,7 @@ export default {
           }
         });
     },
-    async uploadZipFile(fileName, file) {
+    async uploadZipFile(fileName, file, id) {
       this.$q.loading.show({
         message: 'Searching for licenses',
         boxClass: 'bg-blue text-secondary',
@@ -231,6 +231,7 @@ export default {
           formData.append("uploadType", "file");
           formData.append("folderId", "1");
           formData.append("file", file)
+          formData.append("id", id)
           try {
             const response = await axios({
               method: "post",
