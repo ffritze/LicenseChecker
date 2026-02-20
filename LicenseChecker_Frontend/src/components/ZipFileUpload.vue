@@ -141,18 +141,7 @@ export default {
         return;
       }
       this.file = files[0];
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const uint8 = new Uint8Array(e.target.result);
-        let binary = '';
-        for (let i = 0; i < uint8.length; i += 8192) {
-          binary += String.fromCharCode(...uint8.subarray(i, i + 8192));
-        }
-        this.softwareid = md5(binary);
-        console.log("Software ID", this.softwareid);
-      };
-      reader.onerror = () => console.error("FileReader error:", reader.error);
-      reader.readAsArrayBuffer(this.file);
+      this.getSoftwareId();
     },
     dismissError() {
       this.fileError = '';
@@ -196,6 +185,15 @@ export default {
         this.$router.push('/AddLicensesManually');
       }
 
+    },
+    async getSoftwareId() {
+      const fullBuffer = await this.file.arrayBuffer();
+      const hashBuffer = await crypto.subtle.digest('SHA-256', fullBuffer);
+      const sha256 = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+      this.softwareid = sha256;
+      console.log("File Software ID SHA256:", this.softwareid);
     },
     getStatus() {
       console.log("In status", this.softwareid)
