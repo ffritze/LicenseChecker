@@ -6,7 +6,7 @@
       <div v-show="!showTable" class="center-container custom-background-color">
         <div class="form-container">
           <q-form @submit="uploadZipFile()">
-            <q-uploader hide-upload-btn label="Upload zip file" accept=".zip" @added="handleFileUpload"
+            <q-uploader ref="uploader" hide-upload-btn label="Upload zip file" accept=".zip" @added="handleFileUpload"
               color="secondary">
             </q-uploader>
 
@@ -314,6 +314,11 @@ export default {
     },
     foundLincences() {
       this.showTable = true;
+      this.loading = false;
+      this.file = null;
+      if (this.$refs.uploader) {
+        this.$refs.uploader.reset();
+      }
       axios
         .get(
           this.engineURL + "/api/v1/software/" +
