@@ -48,9 +48,16 @@
               </q-card>
             </q-expansion-item>
             <div class="q-pa-md q-gutter-sm">
-              <q-btn v-if="!fromLR" label="Find Compatible Licenses" @click="saveSelected" class="btn q-mr-xs" />
-              <q-btn v-if="fromLR" @click="updateSelected" label="Add to Compatibility list" class="btn q-mr-xs" />
-              <q-btn label="Back" @click="goBack" color="secondary" />
+              <q-btn v-if="!fromLR"
+                style="text-transform: capitalize; background-color: #1A8917; color: white;"
+                label="Find Compatible Licences" @click="saveSelected" />
+              <q-btn v-if="fromLR"
+                style="text-transform: capitalize; background-color: #1A8917; color: white;"
+                label="Add to Compatibility list" @click="updateSelected" />
+              <q-btn style="text-transform: capitalize;" label="Add Licenses from Dependency File" color="secondary"
+                @click="goToAddLicenses('fromDependencyFile')" />
+              <q-btn style="text-transform: capitalize;" label="Add Licenses from License List" color="secondary"
+                @click="goToAddLicenses('manually')" />
             </div>
           </div>
         </div>
