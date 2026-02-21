@@ -22,41 +22,37 @@
         </div>
 
       </div>
-      <!-- Table showing found licenses from uploaded zip file -->
+      <!-- Expansion list showing found licenses from uploaded zip file -->
       <div class="q-pa-md" v-show="showTable">
-        <q-table :rows="dependencyLicenses" :columns="columns" row-key="package_name">
-          <template v-slot:body="props">
-            <q-tr :props="props">
-              <q-td v-for="col in props.cols" :key="col.name" :props="props">
-                <span v-if="col.name === 'selected'">
-                  <q-checkbox v-model="props.row.selected" />
-                </span>
-                <span v-else-if="col.name === 'package_name'">
-                  {{ props.row.package_name }}
-                </span>
-                <span v-else-if="col.name === 'license_name'">
-                  {{ props.row.license_name }}
-                </span>
-                <span v-else-if="col.name === 'dropdown'">
-                  <template v-if="Array.isArray(props.row.license_id) && props.row.license_id.length > 1">
-                    <q-select v-model="props.row.dropdown" :options="props.row.license_id" outlined dense
-                      style="width: 145px;" />
-                  </template>
-                  <template v-else>
-                    {{ props.row.license_id[0] }}
-                  </template>
-                </span>
-                <span v-else>
-                  {{ col.value }}
-                </span>
-              </q-td>
-            </q-tr>
-          </template>
-        </q-table>
-        <div class="q-mt-md">
-          <q-btn v-if="!fromLR" label="Find Compatible Licenses" @click="saveSelected" class="btn q-mr-xs" />
-          <q-btn v-if="fromLR" @click="updateSelected" label="Add to Compatiblity list" class="btn q-mr-xs" />
-          <q-btn label="Back" @click="goBack" color="secondary" />
+        <div v-if="licenses && Object.keys(licenses).length > 0">
+          <div class="row q-mt-md justify-center">
+            <div class="col-3 text-center q-pt-sm">
+              <p class="text">Your code includes the following licenses</p>
+            </div>
+          </div>
+          <p class="text-secondary" style="text-align: center;">Please choose all licenses that should be included in the compatibility check.</p>
+          <div class="q-mx-xl q-mt-md">
+            <q-expansion-item v-for="(paths, license) in licenses" :key="license" class="custom-headerclass bg-primary">
+              <template v-slot:header>
+                <q-item>
+                  <q-item-section>
+                    <q-checkbox v-model="checkboxSelection[license]" :label="` ${license}`" color="green"></q-checkbox>
+                  </q-item-section>
+                </q-item>
+              </template>
+              <q-card class="custom-detailclass">
+                <q-card-section>
+                  <p class="text-subtitle1 text-secondary">This license was found in the following file(s)</p>
+                  <q-list class="text-secondary" v-for="path in paths" :key="path">{{ path }}</q-list>
+                </q-card-section>
+              </q-card>
+            </q-expansion-item>
+            <div class="q-pa-md q-gutter-sm">
+              <q-btn v-if="!fromLR" label="Find Compatible Licenses" @click="saveSelected" class="btn q-mr-xs" />
+              <q-btn v-if="fromLR" @click="updateSelected" label="Add to Compatibility list" class="btn q-mr-xs" />
+              <q-btn label="Back" @click="goBack" color="secondary" />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -77,25 +73,10 @@ export default {
       showTable: false,
       loading: false,
       file: null,
-      dependencyLicenses: [],
-      selectedLicenseIds: [],
-      selectedPermissiveLicenses: {},
-      selectedCopyleftLicenses: {},
-      selectedLicenses: {},
       fileError: null,
       selectedOption: 'ZipFileUpload',
       options: [
         { value: 'ZipFileUpload', label: 'Zip File Upload' },
-      ],
-      columns: [
-        { name: 'selected', label: 'Select', align: 'left' },
-        { name: 'package_name', label: 'Package Name', align: 'left' },
-        { name: 'license_name', label: 'License Name', align: 'left' },
-        { name: 'dropdown', label: 'License ID', align: 'left' },
-      ],
-      licenseColumns: [
-        { name: 'checkbox', label: 'Select', align: 'left' },
-        { name: 'license', label: 'License Name', align: 'left' }
       ],
       fromLR: false,
       status: " ",
@@ -344,15 +325,6 @@ export default {
 
           this.licenses = response.data;
           console.log("Licenses from backend:", this.licenses);
-          this.dependencyLicenses = Object.entries(response.data).flatMap(([license, paths]) =>
-            paths.map(path => ({
-              package_name: path,
-              license_name: license,
-              license_id: [license],
-              dropdown: license,
-              selected: false
-            }))
-          );
           this.checkboxSelection = Object.fromEntries(
             Object.keys(this.licenses).map((license) => [license, true])
           );
@@ -362,18 +334,23 @@ export default {
         });
     },
 
-    async compatibleLicenses() {
+    goBack() {
+      this.showTable = false;
+    },
+    saveSelected() {
       const selectedLicenses = Object.keys(this.checkboxSelection).filter(
         (license) => this.checkboxSelection[license]
       );
-      console.log("changedetailedCompatibleLicensesId fromLR", selectedLicenses);
-      this.$emit("changedetailedCompatibleLicensesId", selectedLicenses);
-      //  Ensure selectedLicenses is an array
-      const licensesArray = Array.isArray(selectedLicenses)
-        ? selectedLicenses
-        : [selectedLicenses];
-      this.$emit("getCompatibleLicenses", licensesArray);
+      this.$parent.$emit('changedetailedCompatibleLicensesId', selectedLicenses);
+      this.$parent.$emit('getCompatibleLicenses', selectedLicenses);
       this.$router.push("/compatibleLicenses");
+    },
+    updateSelected() {
+      const selectedLicenses = Object.keys(this.checkboxSelection).filter(
+        (license) => this.checkboxSelection[license]
+      );
+      this.$parent.$emit('selected-rows', selectedLicenses);
+      this.$router.push('/licenseRecommendation');
     },
 
     reanalyze() {
@@ -392,19 +369,6 @@ export default {
     },
   },
 
-  watch: {
-    dependencyLicenses: {
-      handler(newVal) {
-        this.selectedLicenseIds = [];
-        newVal.forEach(row => {
-          if (row.selected) {
-            this.selectedLicenseIds.push(...row.license_id);
-          }
-        });
-      },
-      deep: true
-    }
-  }
 };
 </script>
 
@@ -435,7 +399,27 @@ export default {
 .btn {
   text-transform: capitalize;
   background-color: #1A8917;
-  text-transform: capitalize;
   color: white;
+}
+
+.text {
+  font-size: 14px;
+  color: #323232;
+  font-weight: bold;
+  padding-top: 3px;
+}
+
+.custom-headerclass {
+  background-color: #323232;
+  border-radius: 10px;
+  border: 2px solid #004191;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.custom-detailclass {
+  border-top: 2px solid #ffffff;
+  border-bottom-left-radius: 10px !important;
+  border-bottom-right-radius: 10px !important;
 }
 </style>
