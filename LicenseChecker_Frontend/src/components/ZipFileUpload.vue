@@ -332,7 +332,7 @@ export default {
       }, 5000);
     },
     foundLincences() {
-      this.showDiv1 = !this.showDiv1;
+      this.showTable = true;
       axios
         .get(
           this.engineURL + "/api/v1/software/" +
@@ -344,6 +344,15 @@ export default {
 
           this.licenses = response.data;
           console.log("Licenses from backend:", this.licenses);
+          this.dependencyLicenses = Object.entries(response.data).flatMap(([license, paths]) =>
+            paths.map(path => ({
+              package_name: path,
+              license_name: license,
+              license_id: [license],
+              dropdown: license,
+              selected: false
+            }))
+          );
           this.checkboxSelection = Object.fromEntries(
             Object.keys(this.licenses).map((license) => [license, true])
           );
